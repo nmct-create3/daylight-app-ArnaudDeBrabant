@@ -14,31 +14,86 @@ function _parseMillisecondsIntoReadableTime(timestamp) {
 }
 
 // 5 TODO: maak updateSun functie
+let updateSun = (sun, sunuptotal, currentTime, interval) => {
+	if (sunuptotal < currentTime) {
+    sunuptotal = sunuptotal + 1;
+    // console.log(up);
+    now.setMinutes(now.getMinutes() + 1);
+    let procent = (sunuptotal / total) * 100;
+    sun.dataset.time = `${now.getHours()}:${now.getMinutes()}`;
+    sun.style.left = procent + '%';
+    if (procent < 50) {
+      sun.style.bottom = 2 * procent + '%';
+    } else {
+      sun.style.bottom = 2 * (100 - procent) + '%';
+    }
+  } else {
+    document.querySelector('html').classList.add('is-night');
+    clearInterval(interval);
+  }
+};
 
 // 4 Zet de zon op de juiste plaats en zorg ervoor dat dit iedere minuut gebeurt.
-let placeSunAndStartMoving = (totalMinutes, sunrise) => {
-	// In de functie moeten we eerst wat zaken ophalen en berekenen.
-	// Haal het DOM element van onze zon op en van onze aantal minuten resterend deze dag.
-	// Bepaal het aantal minuten dat de zon al op is.
-	// Nu zetten we de zon op de initiële goede positie ( met de functie updateSun ). Bereken hiervoor hoeveel procent er van de totale zon-tijd al voorbij is.
-	// We voegen ook de 'is-loaded' class toe aan de body-tag.
-	// Vergeet niet om het resterende aantal minuten in te vullen.
-	// Nu maken we een functie die de zon elke minuut zal updaten
-	// Bekijk of de zon niet nog onder of reeds onder is
-	// Anders kunnen we huidige waarden evalueren en de zon updaten via de updateSun functie.
-	// PS.: vergeet weer niet om het resterend aantal minuten te updaten en verhoog het aantal verstreken minuten.
+
+let placeSunAndStartMoving = (totalMinutes, sunrise, sunset) => {
+  // In de functie moeten we eerst wat zaken ophalen en berekenen.
+
+  // calculations
+  let sun = document.querySelector('.js-sun');
+  let currentTime = new Date(Date.now());
+  let SunUp = new Date(Date.now() - sunrise);
+  let sunuptotal = SunUp.getHours()*60 + SunUp.getMinutes();
+  let procent =(100-((SunUp.getHours() * 60 + SunUp.getMinutes()) / totalMinutes) * 10);
+
+  //print
+  console.log(procent);
+  console.log(totalMinutes);
+  console.log(sunuptotal);
+  console.log(sunset);
+
+  // We zetten de zon op de juiste plek
+  if (sunuptotal <= totalMinutes + 1) {
+    sun.dataset.time = currentTime.getHours() + ':' + currentTime.getMinutes();
+    sun.style.left = procent + '%';
+    if (procent < 50) {
+      sun.style.bottom = 2 * procent + '%';
+    } else {
+      sun.style.bottom = 2 * (100 - procent) + '%';
+    }
+  }
+  
+  let interval = setInterval(function () {
+    updateSun(sun, sunuptotal, currentTime, interval);
+  }, 1000);
+  // We vullen het resterende aantal minuten in
+
+  // Bekijk of de zon niet nog onder of reeds onder is
+  // Anders kunnen we huidige waarden evalueren en de zon updaten via de updateSun functie.
+  // PS.: vergeet weer niet om het resterend aantal minuten te updaten en verhoog het aantal verstreken minuten.
 };
 
 // 3 Met de data van de API kunnen we de app opvullen
 let showResult = queryResponse => {
-	// We gaan eerst een paar onderdelen opvullen
-	
 
+  // Zorg dat de juiste locatie weergegeven wordt, volgens wat je uit de API terug krijgt.
+  document.querySelector('.js-location').innerHTML = queryResponse.city.name;
+  console.log(queryResponse);
 
-	// Zorg dat de juiste locatie weergegeven wordt, volgens wat je uit de API terug krijgt.
-	// Toon ook de juiste tijd voor de opkomst van de zon en de zonsondergang.
-	// Hier gaan we een functie oproepen die de zon een bepaalde positie kan geven en dit kan updaten.
-	// Geef deze functie de periode tussen sunrise en sunset mee en het tijdstip van sunrise.
+  // Toon ook de juiste tijd voor de opkomst van de zon en de zonsondergang.
+  let sunrise = new Date(queryResponse.city.sunrise * 1000);
+  let sunset = new Date(queryResponse.city.sunset * 1000);
+  let totalTime = new Date(sunset - Date.now());
+  let hoursToMinutes = (totalTime.getHours() *60 + sunrise.getMinutes());
+  console.log(hoursToMinutes);
+  document.querySelector('.js-sunrise').innerHTML = sunrise.getHours()+ ':' + sunrise.getMinutes();
+  document.querySelector('.js-sunset').innerHTML = sunset.getHours() + ':' + sunset.getMinutes();
+  document.querySelector('.js-time-left').innerHTML = hoursToMinutes;
+
+  // Hier gaan we een functie oproepen die de zon een bepaalde positie kan geven en dit kan updaten.
+  let totalDayTime = new Date(sunset - sunrise);
+
+  placeSunAndStartMoving(((totalDayTime.getHours()*60)+totalDayTime.getMinutes()), sunrise, sunset);
+  // Geef deze functie de periode tussen sunrise en sunset mee en het tijdstip van sunrise.
 };
 
 // 2 Aan de hand van een longitude en latitude gaan we de yahoo wheater API ophalen.
