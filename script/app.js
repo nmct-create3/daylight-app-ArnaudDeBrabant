@@ -32,6 +32,9 @@ let placeSunAndStartMoving = (totalMinutes, sunrise) => {
 // 3 Met de data van de API kunnen we de app opvullen
 let showResult = queryResponse => {
 	// We gaan eerst een paar onderdelen opvullen
+	
+
+
 	// Zorg dat de juiste locatie weergegeven wordt, volgens wat je uit de API terug krijgt.
 	// Toon ook de juiste tijd voor de opkomst van de zon en de zonsondergang.
 	// Hier gaan we een functie oproepen die de zon een bepaalde positie kan geven en dit kan updaten.
@@ -41,8 +44,14 @@ let showResult = queryResponse => {
 // 2 Aan de hand van een longitude en latitude gaan we de yahoo wheater API ophalen.
 let getAPI = (lat, lon) => {
 	// Eerst bouwen we onze url op
-	// Met de fetch API proberen we de data op te halen.
-	// Als dat gelukt is, gaan we naar onze showResult functie.
+	fetch(
+    `http://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=b3f042e1c4de6ac73326af10e0171b5a&units=metric&lang=nl&cnt=1`
+  )
+    // We gaan de JSON omzetten naar een Javascript object
+    .then((response) => response.json())
+    // Als dat gelukt is, gaan we naar onze showResult functie.
+    .then((data) => showResult(data));
+	
 };
 
 document.addEventListener('DOMContentLoaded', function() {
