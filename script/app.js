@@ -12,39 +12,45 @@ function _parseMillisecondsIntoReadableTime(timestamp) {
 	// Will display time in 10:30(:23) format
 	return hours.substr(-2) + ':' + minutes.substr(-2); //  + ':' + s
 }
-
 // 5 TODO: maak updateSun functie
-let updateSun = (sun, sunuptotal, currentTime, interval) => {
-	if (sunuptotal < currentTime) {
-    sunuptotal = sunuptotal + 1;
-    // console.log(up);
-    now.setMinutes(now.getMinutes() + 1);
-    let procent = (sunuptotal / total) * 100;
-    sun.dataset.time = `${now.getHours()}:${now.getMinutes()}`;
-    sun.style.left = procent + '%';
-    if (procent < 50) {
-      sun.style.bottom = 2 * procent + '%';
-    } else {
-      sun.style.bottom = 2 * (100 - procent) + '%';
-    }
+let updateSun = (sunHTML, minutesSunUp, totalMinutes) => {
+  // 5a TODO: bereken hoeveel procent de zon al op is
+  let percentage = (minutesSunUp / totalMinutes) * 100;
+  // 5b TODO: gebruik dit percentage om de breedte van de sun te bepalen
+  sunHTML.style.left = `${percentage}%`;
+  let percentageB;
+  if (percentage > 50) {
+    percentageB = (100 - percentage) * 2;
   } else {
-    document.querySelector('html').classList.add('is-night');
-    clearInterval(interval);
+    percentageB = percentage * 2;
   }
+  sunHTML.style.bottom = `${percentageB}%`;
+  if (percentageB > 100 || percentageB < 0) {
+    document.querySelector('.is-day').classList.add('is-night');
+  } else {
+    document.querySelector('.is-day').classList.remove('is-night');
+  }
+
+  //sunHTML.style.bottom berekenen
+  sunHTML.dataset.time = _parseMillisecondsIntoReadableTime(Date.now() / 1000);
 };
 
 // 4 Zet de zon op de juiste plaats en zorg ervoor dat dit iedere minuut gebeurt.
 
 let placeSunAndStartMoving = (totalMinutes, sunrise, sunset) => {
   // In de functie moeten we eerst wat zaken ophalen en berekenen.
+  
 
   // calculations
   let sun = document.querySelector('.js-sun');
   let currentTime = new Date(Date.now());
   let SunUp = new Date(Date.now() - sunrise);
   let sunuptotal = SunUp.getHours()*60 + SunUp.getMinutes();
-  let procent =(100-((SunUp.getHours() * 60 + SunUp.getMinutes()) / totalMinutes) * 10);
+  let procent = (sunuptotal / totalMinutes) * 100;
+  hoursToMinutes = totalMinutes - sunuptotal;
 
+
+  document.querySelector('.js-time-left').innerHTML = hoursToMinutes;
   //print
   console.log(procent);
   console.log(totalMinutes);
@@ -63,7 +69,7 @@ let placeSunAndStartMoving = (totalMinutes, sunrise, sunset) => {
   }
   
   let interval = setInterval(function () {
-    updateSun(sun, sunuptotal, currentTime, interval);
+    updateSun(sun, sunuptotal, totalMinutes, currentTime, interval);
   }, 1000);
   // We vullen het resterende aantal minuten in
 
@@ -82,12 +88,9 @@ let showResult = queryResponse => {
   // Toon ook de juiste tijd voor de opkomst van de zon en de zonsondergang.
   let sunrise = new Date(queryResponse.city.sunrise * 1000);
   let sunset = new Date(queryResponse.city.sunset * 1000);
-  let totalTime = new Date(sunset - Date.now());
-  let hoursToMinutes = (totalTime.getHours() *60 + sunrise.getMinutes());
-  console.log(hoursToMinutes);
   document.querySelector('.js-sunrise').innerHTML = sunrise.getHours()+ ':' + sunrise.getMinutes();
   document.querySelector('.js-sunset').innerHTML = sunset.getHours() + ':' + sunset.getMinutes();
-  document.querySelector('.js-time-left').innerHTML = hoursToMinutes;
+  
 
   // Hier gaan we een functie oproepen die de zon een bepaalde positie kan geven en dit kan updaten.
   let totalDayTime = new Date(sunset - sunrise);
